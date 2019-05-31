@@ -29,8 +29,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _PRINTF_H_
-#define _PRINTF_H_
+#ifndef PRINTF_H
+#define PRINTF_H
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -102,16 +102,17 @@ int vprintf_(const char* format, va_list va);
  * printf with output function
  * You may use this as dynamic alternative to printf() with its fixed _putchar() output
  * \param out An output function which takes one character and an argument pointer
- * \param arg An argument pointer for user data passed to output function
+ * \param ptr An argument pointer for user data passed to output function
  * \param format A string that specifies the format of the output
+ * \param va A variable list
  * \return The number of characters that are sent to the output function, not counting the terminating null character
  */
-int fctprintf(void (*out)(char character, void* arg), void* arg, const char* format, ...);
-
+typedef void (*out_fct_type)(char character, void* buffer);
+uint8_t format_out(out_fct_type out, void* ptr, const char* format, va_list va);
 
 #ifdef __cplusplus
 }
 #endif
 
 
-#endif  // _PRINTF_H_
+#endif  // PRINTF_H

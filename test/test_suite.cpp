@@ -26,6 +26,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#define PRINTF_DISABLE_SUPPORT_EXPONENTIAL
+#define PRINTF_DISABLE_SUPPORT_FLOAT
+
 // use the 'catch' test framework
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -33,7 +36,7 @@
 #include <string.h>
 #include <sstream>
 #include <math.h>
-
+#include <stdio.h>
 
 namespace test {
   // use functions in own test namespace to avoid stdio conflicts
@@ -57,11 +60,21 @@ void _out_fct(char character, void* arg)
   printf_buffer[printf_idx++] = character;
 }
 
+namespace test
+{
+	void fctprintf(test::out_fct_type out, void* buffer, const char *format, ...)
+	{
+		va_list va;
+		va_start(va, format);
+		test::format_out(out, buffer, format, va);
+		va_end(va);
+	}
+}
 
 TEST_CASE("printf", "[]" ) {
   printf_idx = 0U;
   memset(printf_buffer, 0xCC, 100U);
-  REQUIRE(test::printf("% d", 4232) == 5);
+  REQUIRE(test::printf_("% d", 4232) == 5);
   REQUIRE(printf_buffer[5] == (char)0xCC);
   printf_buffer[5] = 0;
   REQUIRE(!strcmp(printf_buffer, " 4232"));
@@ -157,13 +170,13 @@ TEST_CASE("space flag", "[]" ) {
 
   test::sprintf(buffer, "% 15d", -42);
   REQUIRE(!strcmp(buffer, "            -42"));
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   test::sprintf(buffer, "% 15.3f", -42.987);
   REQUIRE(!strcmp(buffer, "        -42.987"));
 
   test::sprintf(buffer, "% 15.3f", 42.987);
   REQUIRE(!strcmp(buffer, "         42.987"));
-
+#endif
   test::sprintf(buffer, "% s", "Hello testing");
   REQUIRE(!strcmp(buffer, "Hello testing"));
 
@@ -299,7 +312,7 @@ TEST_CASE("0 flag", "[]" ) {
 
   test::sprintf(buffer, "%015d", -42);
   REQUIRE(!strcmp(buffer, "-00000000000042"));
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   test::sprintf(buffer, "%015.2f", 42.1234);
   REQUIRE(!strcmp(buffer, "000000000042.12"));
 
@@ -308,6 +321,7 @@ TEST_CASE("0 flag", "[]" ) {
 
   test::sprintf(buffer, "%015.5f", -42.9876);
   REQUIRE(!strcmp(buffer, "-00000042.98760"));
+#endif
 }
 
 
@@ -611,10 +625,10 @@ TEST_CASE("width -20", "[]" ) {
 
   test::sprintf(buffer, "%-20u", 1024);
   REQUIRE(!strcmp(buffer, "1024                "));
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   test::sprintf(buffer, "%-20.4f", 1024.1234);
   REQUIRE(!strcmp(buffer, "1024.1234           "));
-
+#endif
   test::sprintf(buffer, "%-20u", 4294966272U);
   REQUIRE(!strcmp(buffer, "4294966272          "));
 
@@ -938,7 +952,7 @@ TEST_CASE("padding neg numbers", "[]" ) {
 
 TEST_CASE("float padding neg numbers", "[]" ) {
   char buffer[100];
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   // space padding
   test::sprintf(buffer, "% 3.1f", -5.);
   REQUIRE(!strcmp(buffer, "-5.0"));
@@ -989,6 +1003,7 @@ TEST_CASE("float padding neg numbers", "[]" ) {
 
   test::sprintf(buffer, "%03.0g", -5.);
   REQUIRE(!strcmp(buffer, "-05"));
+#endif
 #endif
 }
 
@@ -1077,7 +1092,7 @@ TEST_CASE("length", "[]" ) {
 
 TEST_CASE("float", "[]" ) {
   char buffer[100];
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   // test special-case floats using math.h macros
   test::sprintf(buffer, "%8f", NAN);
   REQUIRE(!strcmp(buffer, "     nan"));
@@ -1235,6 +1250,7 @@ TEST_CASE("float", "[]" ) {
     fail = fail || !!strcmp(buffer, str.str().c_str());
   }
   REQUIRE(!fail);
+#endif
 #endif
 }
 
@@ -1484,10 +1500,10 @@ TEST_CASE("misc", "[]" ) {
 
   test::sprintf(buffer, "%u%u%ctest%d %s", 5, 3000, 'a', -20, "bit");
   REQUIRE(!strcmp(buffer, "53000atest-20 bit"));
-
+#ifndef PRINTF_DISABLE_SUPPORT_FLOAT
   test::sprintf(buffer, "%.*f", 2, 0.33333333);
   REQUIRE(!strcmp(buffer, "0.33"));
-
+#endif
   test::sprintf(buffer, "%.*d", -1, 1);
   REQUIRE(!strcmp(buffer, "1"));
 
