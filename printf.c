@@ -31,7 +31,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /* Optimized for low stack use on ARM. Support for floating point has been removed. 
- *	It should use less than 100 bytes on the stack on 32 bit ARM. 
+ * It should use less than 100 bytes on the stack on 32 bit ARM. 
  */
 
 /* Formatted output with the following format specifier: %[flags][width][.precision][length]type
@@ -427,7 +427,7 @@ static void ntoa_long_long(data_t *data, unsigned long long value)
 	}
 }
 
-static inline void pre_format_long_long(data_t *data, unsigned long long value, bool negative)
+static void pre_format_long_long(data_t *data, unsigned long long value, bool negative)
 {
 	data->digit_count = get_digits_long_long(value, data->base);
 	// no hash for 0 values
@@ -475,7 +475,7 @@ static void print_string(data_t *data, const char *p)
 	}
 }
 
-static inline void pre_format_long(data_t *data, unsigned long value, bool negative)
+static void pre_format_long(data_t *data, unsigned long value, bool negative)
 {
 	data->digit_count = get_digits_long(value, data->base);
 	// no hash for 0 values
