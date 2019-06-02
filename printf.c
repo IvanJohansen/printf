@@ -386,7 +386,8 @@ static uint8_t get_digits_long_long(unsigned long long value, base_t base)
 static void ntoa_long_long(data_t *data, unsigned long long value)
 {
 	// write if precision != 0 and value is != 0
-	if (!(data->flags & FLAGS_PRECISION) || value) {
+	if (!(data->flags & FLAGS_PRECISION) || value)
+	{
 		if (value == 0)
 		{
 			data->out('0', data->ptr);
@@ -394,7 +395,7 @@ static void ntoa_long_long(data_t *data, unsigned long long value)
 		}
 		else if (data->base == BASE_DECIMAL)
 		{
-			while(data->digit_count > 0)
+			while (data->digit_count > 0)
 			{
 				data->digit_count--;
 				unsigned long long l = pow10_long_long[data->digit_count];
@@ -406,12 +407,9 @@ static void ntoa_long_long(data_t *data, unsigned long long value)
 		}
 		else
 		{
-			static const uint8_t bits[] = {1, 3, 0, 4};
-			static const uint8_t mask[] = {1, 7, 0, 15};
-			
-			for(; data->digit_count > 0; data->digit_count--)
+			for (; data->digit_count > 0; data->digit_count--)
 			{
-				uint8_t digit = (value >> (data->digit_count-1)*bits[data->base]) & mask[data->base];
+				uint8_t digit = (value >> (data->digit_count - 1) * base_bits[data->base]) & base_mask[data->base];
 				data->out(digit < 10 ? '0' + digit : (data->flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10, data->ptr);
 				data->idx++;
 			}
@@ -419,8 +417,10 @@ static void ntoa_long_long(data_t *data, unsigned long long value)
 	}
 
 	// append pad spaces up to given width
-	if (data->flags & FLAGS_LEFT) {
-		while (data->width > 0) {
+	if (data->flags & FLAGS_LEFT)
+	{
+		while (data->width > 0)
+		{
 			data->out(' ', data->ptr);
 			data->width--;
 		}
