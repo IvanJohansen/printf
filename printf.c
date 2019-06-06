@@ -292,6 +292,8 @@ static void ntoa_format(data_t *data)
 static uint8_t get_digits_long(unsigned long value, base_t base)
 {
 	uint8_t digits = 0;
+	if (value == 0)
+		return 1;
 	if (base == BASE_DECIMAL)
 	{
 		while (digits < ARRAY_SIZE(pow10_long) && value >= pow10_long[digits])
@@ -318,34 +320,30 @@ static void do_out(data_t *data, char c)
 // internal itoa for 'long' type
 static void ntoa_long(data_t *data, unsigned long value)
 {
-	// write if precision != 0 and value is != 0
-	if (!(data->flags & FLAGS_PRECISION) || value) 
+	if (value == 0 && !(data->flags & FLAGS_PRECISION))
 	{
-		if (value == 0)
+		data->out('0', data->ptr);
+		data->idx++;
+	}
+	else if(data->base == BASE_DECIMAL)
+	{
+		while(data->digit_count > 0)
 		{
-			data->out('0', data->ptr);
+			data->digit_count--;
+			unsigned long l = pow10_long[data->digit_count];
+			uint8_t digit = value / l;
+			value %= l;
+			data->out(digit + '0', data->ptr);
 			data->idx++;
 		}
-		else if(data->base == BASE_DECIMAL)
+	}
+	else
+	{
+		for(; data->digit_count > 0; data->digit_count--)
 		{
-			while(data->digit_count > 0)
-			{
-				data->digit_count--;
-				unsigned long l = pow10_long[data->digit_count];
-				uint8_t digit = value / l;
-				value %= l;
-				data->out(digit + '0', data->ptr);
-				data->idx++;
-			}
-		}
-		else
-		{
-			for(; data->digit_count > 0; data->digit_count--)
-			{
-				uint8_t digit = (value >> (data->digit_count-1) * base_bits[data->base]) & base_mask[data->base];
-				data->out(digit < 10 ? '0' + digit : (data->flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10, data->ptr);
-				data->idx++;
-			}
+			uint8_t digit = (value >> (data->digit_count-1) * base_bits[data->base]) & base_mask[data->base];
+			data->out(digit < 10 ? '0' + digit : (data->flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10, data->ptr);
+			data->idx++;
 		}
 	}
 
@@ -366,6 +364,8 @@ static void ntoa_long(data_t *data, unsigned long value)
 static uint8_t get_digits_long_long(unsigned long long value, base_t base)
 {
 	uint8_t digits = 0;
+	if (value == 0)
+		return 1;
 	if (base == BASE_DECIMAL)
 	{
 		while (digits < ARRAY_SIZE(pow10_long_long) && value >= pow10_long_long[digits])
@@ -385,34 +385,30 @@ static uint8_t get_digits_long_long(unsigned long long value, base_t base)
 // internal itoa for 'long' type
 static void ntoa_long_long(data_t *data, unsigned long long value)
 {
-	// write if precision != 0 and value is != 0
-	if (!(data->flags & FLAGS_PRECISION) || value)
+	if (value == 0 && !(data->flags & FLAGS_PRECISION))
 	{
-		if (value == 0)
+		data->out('0', data->ptr);
+		data->idx++;
+	}
+	else if (data->base == BASE_DECIMAL)
+	{
+		while (data->digit_count > 0)
 		{
-			data->out('0', data->ptr);
+			data->digit_count--;
+			unsigned long long l = pow10_long_long[data->digit_count];
+			uint8_t digit = value / l;
+			value %= l;
+			data->out(digit + '0', data->ptr);
 			data->idx++;
 		}
-		else if (data->base == BASE_DECIMAL)
+	}
+	else
+	{
+		for (; data->digit_count > 0; data->digit_count--)
 		{
-			while (data->digit_count > 0)
-			{
-				data->digit_count--;
-				unsigned long long l = pow10_long_long[data->digit_count];
-				uint8_t digit = value / l;
-				value %= l;
-				data->out(digit + '0', data->ptr);
-				data->idx++;
-			}
-		}
-		else
-		{
-			for (; data->digit_count > 0; data->digit_count--)
-			{
-				uint8_t digit = (value >> (data->digit_count - 1) * base_bits[data->base]) & base_mask[data->base];
-				data->out(digit < 10 ? '0' + digit : (data->flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10, data->ptr);
-				data->idx++;
-			}
+			uint8_t digit = (value >> (data->digit_count - 1) * base_bits[data->base]) & base_mask[data->base];
+			data->out(digit < 10 ? '0' + digit : (data->flags & FLAGS_UPPERCASE ? 'A' : 'a') + digit - 10, data->ptr);
+			data->idx++;
 		}
 	}
 
@@ -431,8 +427,12 @@ static void pre_format_long_long(data_t *data, unsigned long long value, bool ne
 {
 	data->digit_count = get_digits_long_long(value, data->base);
 	// no hash for 0 values
-	if (!value)
+	if (value == 0)
 	{
+		if (data->flags & FLAGS_PRECISION)
+		{
+			data->digit_count = 0;
+		}
 		data->flags &= ~FLAGS_HASH;
 	}
 	if (negative)
@@ -478,9 +478,14 @@ static void print_string(data_t *data, const char *p)
 static void pre_format_long(data_t *data, unsigned long value, bool negative)
 {
 	data->digit_count = get_digits_long(value, data->base);
+
 	// no hash for 0 values
-	if (!value) 
+	if (value == 0) 
 	{
+		if (data->flags & FLAGS_PRECISION)
+		{
+			data->digit_count = 0;
+		}
 		data->flags &= ~FLAGS_HASH;
 	}
 	if(negative)
