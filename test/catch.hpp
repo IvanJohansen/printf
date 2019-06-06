@@ -3475,7 +3475,7 @@ namespace Catch {
 namespace Catch {
 #if !defined(CATCH_CONFIG_DISABLE_EXCEPTIONS)
     template <typename Ex>
-    [[noreturn]]
+//    [[noreturn]]
     void throw_exception(Ex const& e) {
         throw e;
     }
